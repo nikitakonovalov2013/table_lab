@@ -4,7 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#define MAX_SIZE 100
+#define MAX_SIZE 10
 #define HEAD "Ключ №1\tКлюч №2\tЗначение\n"
 #define FORM "%i\t%i\t%s"
 #define h(x) x%MAX_SIZE
@@ -15,14 +15,49 @@ typedef struct {
 	char *info;
 } item;
 
+
+static int get_info(char **);
+static int clear(item *, int *);
 static int e_add(item *, int *, int *);
 static int e_delete(item *, int *, int *, int);
 static int e_find(item *, int *, int, int, int);
 static int t_print(item *,int *, int );
 static int e_print(item *, int *, int, int);
-//static int t_random(item *, int *, int *, char *);
 static int get_keys(char **, char **, int);
 
+static int clear(item *table, int *check) {
+	for (int i = 0; i <= MAX_SIZE; i++) {
+		if (check[i] == 1 || check[i] == -1) {
+			free(table[i].info);
+		}
+	}
+	return 0;
+}
+static int get_info(char **g_info) {
+	int buf = 256;
+	int flag = 0;
+
+	if (((*g_info) = ((char *)malloc(buf * sizeof(char)))) == NULL) {
+		fprintf(stderr,"Невозможно выделить память!\n");
+		return -1;
+	}
+
+	do {
+		if (((*g_info) = ((char *)realloc((*g_info), buf))) == NULL) {
+			fprintf(stderr,"Невозможно выделить память!\n");
+			return -1;
+		}
+		fgets(*g_info,buf,stdin);
+		for (int i = 0; i < strlen(*g_info); i++) {
+			if ((*g_info)[i] == '\n') {
+				flag = 1;
+			} else {
+				buf *= 2;
+			}
+		}
+	} while (flag == 0);
+	return 0;
+}
 static int get_keys(char ** k1, char ** k2, int num) {
 	
 	size_t buf = 0;
@@ -43,6 +78,9 @@ static int get_keys(char ** k1, char ** k2, int num) {
 				break;
 			}
 		}
+		if (strlen(*k1) > 9) {
+			flag = 0;
+		}
 	} while (flag == 0);	
 	}
 	
@@ -56,19 +94,21 @@ static int get_keys(char ** k1, char ** k2, int num) {
 			return -1;
 		}
 		for (int i = 0; i < strlen(*k2)-1; i++) {
-			if ((*k2)[0] == 0 || isdigit((*k2)[i]) == 0) {
+			if ((*k2)[0] == '0' || (isdigit((*k2)[i])) == 0) {
+				printf("%c\n", (*k2)[0]);
 				flag = 0;
 				free(*k2);
 				buf = 0;
 				break;
 			}
 		}
+		if (strlen(*k2) > 9) {
+			flag = 0;
+		}
 	} while (flag == 0);
 	}
 	return 0;
 }
-
-
 	
 /*static int t_random(item *table, int *check, int *t_size, char *text) {
 	
@@ -89,15 +129,22 @@ static int t_print(item *table, int *check, int t_size) {
 		return 0;
 	}
 
-	printf(HEAD);
-	for (int i = 0; i < MAX_SIZE; i++) {
-		if (check[i] == 1)
-			printf(FORM, table[i].key1, table[i].key2, table[i].info);
+	printf("Ключ №1\tКлюч №2\tЗначение\n");
+
+	for (int i = 0; i <= MAX_SIZE; i++) {
+		if (check[i] == 1) {
+			printf("%i\t%i\t%s",table[i].key1, table[i].key2, table[i].info);
+		}
 	}
 	return 0;
 }
 
 static int e_print(item *table, int *check, int t_size, int num) {
+
+	if (t_size == 0) {
+		printf("Таблица пуста!\n");
+		return 0;
+	}
 	
 	int i = 0;
 	char *k1, *k2;
@@ -133,7 +180,7 @@ static int e_find(item *table, int *check, int key1, int key2, int t_size) {
 	if (key2 > 0) {
 		int i = h(key2);
 		int n = 0;
-		while ((check[i] == 1) && (n < MAX_SIZE)) {
+		while ((check[i] == 1 || check[i] == -1) && (n < MAX_SIZE)) {
 			if ((check[i] == 1) && (key2 == table[i].key2))
 				return i;
 			i = h(i+1);
@@ -143,7 +190,7 @@ static int e_find(item *table, int *check, int key1, int key2, int t_size) {
 		
 	if (key1 > 0) {
 		for (int j = 0; j < MAX_SIZE; j++) {
-			if (check[j] == 1 && key1 == table[j].key1) {
+			if ((check[j] == 1 || check[j] == -1) && key1 == table[j].key1) {
 				return j;
 			}
 		}
@@ -154,7 +201,7 @@ static int e_find(item *table, int *check, int key1, int key2, int t_size) {
 static int e_add(item *table, int *check, int *t_size) {
 
 	if (*t_size >= MAX_SIZE) {
-		printf("Таблица заполнена!\n");
+		printf("Таблица заполнена!\nМЕНЮ:\n");
 		return -1;
 	}
 	
@@ -164,25 +211,28 @@ static int e_add(item *table, int *check, int *t_size) {
 	size_t buf = 0;
 	if ((e_find(table, check, atoi(k1), -1, *t_size) < 0) && (e_find(table, check, -1, atoi(k2), *t_size) < 0)) {
 		
-		char *info;
-		printf("Введите значение элемента: ");
-		getline(&info, &buf, stdin);
-		
 		int n = 0;
 		int i = h(atoi(k2));
-		while (check[i] == 1 && n < MAX_SIZE) {
+		
+		while ((check[i] == 1) && (n < MAX_SIZE)) {
 			i = h(i+1);
 			n += 1;
 		}
 		if (n < MAX_SIZE) {			 
 			table[i].key1 = atoi(k1);
 			table[i].key2 = atoi(k2);
-			asprintf(&table[i].info,"%s",info);
+			printf("Введите значение элемента: ");
+			get_info(&(table[i].info));
+			//getline(&table[i].info, &buf, stdin);
+		
 			check[i] = 1;
 			*t_size += 1;
 			printf("Элемент успешно добавлен.\n");
-			free(info);
+			
 			return 0;
+		} else {
+			printf("Таблица заполнена!\n");
+			return -1;
 		}
 	} else {
 		printf("Данные ключи заняты!\n");
@@ -204,9 +254,9 @@ static int e_delete(item *table, int *check, int *t_size, int num) {
 	int i = 0;
 	if (num == 1) {
 		if ((i = e_find(table, check, atoi(k1), -1, *t_size)) >= 0) {
-			check[i] = 0;
+			check[i] = -1;
 			*t_size -= 1;
-			printf("Элемент успешно удален");
+			printf("Элемент успешно удален\n");
 			return 0;
 		} else {
 			printf("Элемент не найден!\n");
@@ -215,9 +265,9 @@ static int e_delete(item *table, int *check, int *t_size, int num) {
 	}
 	if (num == 2) {
 		if ((i = e_find(table, check, -1, atoi(k2), *t_size)) >= 0) {
-			check[i] = 0;
+			check[i] = -1;
 			*t_size -= 1;
-			printf("Элемент успешно удален");
+			printf("Элемент успешно удален\n");
 			return 0;
 		} else {
 			printf("Элемент не найден!\n");
@@ -227,15 +277,15 @@ static int e_delete(item *table, int *check, int *t_size, int num) {
 	return 0;
 }	
 
-int main(){
+int main() {
 	
 	int t_size = 0;
-	int check[MAX_SIZE];
+	int check[MAX_SIZE+1];
 	for (int i = 0; i < MAX_SIZE; i++) {
 		check[i] = 0;
 	}
 
-	item table[MAX_SIZE];
+	item table[MAX_SIZE+1];
 	char *c = (char *)malloc(10 * sizeof(char));
 	size_t b = 1;
 
@@ -263,10 +313,15 @@ int main(){
 					if (strlen(s) > 2 || strlen(s) < 2)
 						printf("Только один символ!\n");
 				} while (strlen(s) > 2 || strlen(s) < 2);
-				if (s[0] == '1')
+				
+				if (s[0] == '1') {
 					e_delete(table, check, &t_size, 1);
-				if (s[0] == '2')
+				}
+				else if (s[0] == '2') {
 					e_delete(table, check, &t_size, 2);
+				} else {
+					printf("Неверное значение!\nМЕНЮ:\n");
+				}
 				free(s);
 				break;
 			case 'k':
@@ -276,22 +331,28 @@ int main(){
 					getline(&k,&b,stdin);
 					if (strlen(k) > 2 || strlen(k) < 2)
 						printf("Только один символ!\n");
-				} while (strlen(k) > 2 || strlen(s) < 2);
-				if (k[0] == '1')
+				} while (strlen(k) > 2 || strlen(k) < 2);
+				
+				if (k[0] == '1') {
 					e_print(table, check, t_size, 1);
-				if (k[0] == '2')
+				}
+				else if (k[0] == '2') {
 					e_print(table, check, t_size, 2);
+				} else {
+					printf("Неверное значение!\nМЕНЮ:\n");
+				}
 				free(k);
 				break;
-
-			case 'm':
+					case 'm':
 				printf("Выберите действие:\na - добавить элемент в таблицу;\np - вывести таблицу на экран;\nd - удалить элемент\nk - вывести элемент на экран\nm - показать меню\nq - выйти.\n");
+				break;
+			default:
+				if (c[0] != 'q')
+					printf("Используйте команды из меню (m - вызвать меню)\n");
 				break;
 		}
 	} while (c[0] != 'q');
 	free(c);
-/*	for (int i = 0; i < MAX_SIZE; i++) {
-		printf("%i\n",check[i]);
-	}*/
+	clear(table, check);	
 	return 0;
 }
