@@ -6,7 +6,7 @@
 
 #define MAX_SIZE 100
 #define HEAD "Ключ №1\tКлюч №2\tЗначение\n"
-#define FORM "%i\t%i\t%s\n"
+#define FORM "%i\t%i\t%s"
 #define h(x) x%MAX_SIZE
 
 typedef struct {
@@ -19,8 +19,8 @@ static int e_add(item *, int *, int *);
 static int e_delete(item *, int *, int *, int);
 static int e_find(item *, int *, int, int, int);
 static int t_print(item *,int *, int );
-static int e_print(item *, int, int, int);
-static int t_random(item *, int *, int *, char *);
+static int e_print(item *, int *, int, int);
+//static int t_random(item *, int *, int *, char *);
 static int get_keys(char **, char **, int);
 
 static int get_keys(char ** k1, char ** k2, int num) {
@@ -70,7 +70,7 @@ static int get_keys(char ** k1, char ** k2, int num) {
 
 
 	
-static int t_random(item *table, int *check, int *t_size, char *text) {
+/*static int t_random(item *table, int *check, int *t_size, char *text) {
 	
 	for (int i = 0; i < 10; i += 2) {
 		table[i].key1 = i;
@@ -80,7 +80,7 @@ static int t_random(item *table, int *check, int *t_size, char *text) {
 		*t_size += 1;
 		
 	}
-}
+}*/
 
 static int t_print(item *table, int *check, int t_size) {
 	
@@ -97,27 +97,44 @@ static int t_print(item *table, int *check, int t_size) {
 	return 0;
 }
 
-/*static int e_print(item *table, int key1, int key2, int t_size) {
+static int e_print(item *table, int *check, int t_size, int num) {
 	
 	int i = 0;
-	if (i = e_find(table, key1, key2, t_size) > 0) {
-		printf(HEAD);
-		printf(FORM, table[i].key1, table[i].key2, table[i].info);
-		return 0;
-	} else {
-		printf("Элемент не найден!\n");
-		return 0;
+	char *k1, *k2;
+	get_keys(&k1, &k2, num);
+	
+	if (num == 1) {
+		
+		if ((i = e_find(table, check, atoi(k1), -1, t_size)) > 0) {
+			printf(HEAD);
+			printf(FORM, table[i].key1, table[i].key2, table[i].info);
+			return 0;
+		} else {
+			printf("Элемент не найден!\n");
+			return 0;
+		}
 	}
+	if (num == 2) {
+		if ((i = e_find(table, check, -1, atoi(k2), t_size)) > 0) {
+			printf(HEAD);
+			printf(FORM, table[i].key1, table[i].key2, table[i].info);
+			return 0;
+		} else {
+			printf("Элемент не найден!\n");
+			return 0;
+		}
+	}
+		
 	return 0;
-}*/
+}
 
 static int e_find(item *table, int *check, int key1, int key2, int t_size) {
 	
 	if (key2 > 0) {
 		int i = h(key2);
 		int n = 0;
-		while (check[i] == 0 && n < MAX_SIZE) {
-			if (check[i] == 1 && key2 == table[i].key2)
+		while ((check[i] == 1) && (n < MAX_SIZE)) {
+			if ((check[i] == 1) && (key2 == table[i].key2))
 				return i;
 			i = h(i+1);
 			n += 1;
@@ -125,9 +142,9 @@ static int e_find(item *table, int *check, int key1, int key2, int t_size) {
 	}
 		
 	if (key1 > 0) {
-		for (int i = 0; i < MAX_SIZE; i++) {
-			if (check[i] == 1 && key1 == table[i].key1) {
-				return i;
+		for (int j = 0; j < MAX_SIZE; j++) {
+			if (check[j] == 1 && key1 == table[j].key1) {
+				return j;
 			}
 		}
 	}
@@ -144,7 +161,7 @@ static int e_add(item *table, int *check, int *t_size) {
 	char *k1, *k2;
 	get_keys(&k1, &k2, 0);
 		
-	int buf = 0;
+	size_t buf = 0;
 	if ((e_find(table, check, atoi(k1), -1, *t_size) < 0) && (e_find(table, check, -1, atoi(k2), *t_size) < 0)) {
 		
 		char *info;
@@ -184,13 +201,12 @@ static int e_delete(item *table, int *check, int *t_size, int num) {
 	
 	char *k1, *k2;
 	get_keys(&k1, &k2, num);
-	printf("%i\n",atoi(k1));
-	int i;
+	int i = 0;
 	if (num == 1) {
 		if ((i = e_find(table, check, atoi(k1), -1, *t_size)) >= 0) {
-			printf("%i\n",i);
 			check[i] = 0;
 			*t_size -= 1;
+			printf("Элемент успешно удален");
 			return 0;
 		} else {
 			printf("Элемент не найден!\n");
@@ -201,6 +217,7 @@ static int e_delete(item *table, int *check, int *t_size, int num) {
 		if ((i = e_find(table, check, -1, atoi(k2), *t_size)) >= 0) {
 			check[i] = 0;
 			*t_size -= 1;
+			printf("Элемент успешно удален");
 			return 0;
 		} else {
 			printf("Элемент не найден!\n");
@@ -210,29 +227,71 @@ static int e_delete(item *table, int *check, int *t_size, int num) {
 	return 0;
 }	
 
-		  
-	
 int main(){
 	
 	int t_size = 0;
-	char text[] = "random and !!!";
-	
 	int check[MAX_SIZE];
 	for (int i = 0; i < MAX_SIZE; i++) {
 		check[i] = 0;
 	}
 
 	item table[MAX_SIZE];
-	
-	t_random(table, check, &t_size, text);
-	t_print(table, check, t_size);
-	
-	e_add(table, check, &t_size);
-	//e_print(table,100,200,t_size);
+	char *c = (char *)malloc(10 * sizeof(char));
+	size_t b = 1;
 
-	//printf("%i\n",t_size);
-	//printf("%i %i %s\n", table[5].key1, table[5].key2, table[5].info);
+	printf("Выберите действие:\na - добавить элемент в таблицу;\np - вывести таблицу на экран;\nd - удалить элемент\nk - вывести элемент на экран\nm - показать меню\nq - выйти.\n");
+	do {
+		do {	
+			getline(&c,&b,stdin);
+			if (strlen(c) > 2 || strlen(c) < 2)
+				printf("Только один символ!\n");
+		} while(strlen(c) > 2 || strlen(c) < 2);
 
-	t_print(table, check, t_size);
-	//e_print(table,-1,105,t_size);
+		switch (c[0]) {
+			case 'a':
+				printf("ДОБАВЛЕНИЕ\n");
+				e_add(table, check, &t_size);
+				break;
+			case 'p':
+				t_print(table, check, t_size);
+				break;
+			case 'd':
+				printf("УДАЛЕНИЕ\nВыберите пространство ключей (нажмите 1 или 2):\n");
+				char *s = (char *)malloc(10 * sizeof(char));
+				do {
+					getline(&s,&b,stdin);
+					if (strlen(s) > 2 || strlen(s) < 2)
+						printf("Только один символ!\n");
+				} while (strlen(s) > 2 || strlen(s) < 2);
+				if (s[0] == '1')
+					e_delete(table, check, &t_size, 1);
+				if (s[0] == '2')
+					e_delete(table, check, &t_size, 2);
+				free(s);
+				break;
+			case 'k':
+				printf("ПОИСК\nВыберите пространство ключей (нажмите 1 или 2):\n");
+				char *k = (char *)malloc(10 * sizeof(char));
+				do {
+					getline(&k,&b,stdin);
+					if (strlen(k) > 2 || strlen(k) < 2)
+						printf("Только один символ!\n");
+				} while (strlen(k) > 2 || strlen(s) < 2);
+				if (k[0] == '1')
+					e_print(table, check, t_size, 1);
+				if (k[0] == '2')
+					e_print(table, check, t_size, 2);
+				free(k);
+				break;
+
+			case 'm':
+				printf("Выберите действие:\na - добавить элемент в таблицу;\np - вывести таблицу на экран;\nd - удалить элемент\nk - вывести элемент на экран\nm - показать меню\nq - выйти.\n");
+				break;
+		}
+	} while (c[0] != 'q');
+	free(c);
+/*	for (int i = 0; i < MAX_SIZE; i++) {
+		printf("%i\n",check[i]);
+	}*/
+	return 0;
 }
