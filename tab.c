@@ -6,7 +6,7 @@
 
 #define MAX_SIZE 10
 #define HEAD "Ключ №1\tКлюч №2\tЗначение\n"
-#define FORM "%i\t%i\t%s"
+#define FORM "%i\t%i\t%s\n"
 #define h(x) x%MAX_SIZE
 
 typedef struct {
@@ -34,28 +34,36 @@ static int clear(item *table, int *check) {
 	return 0;
 }
 static int get_info(char **g_info) {
+		
 	int buf = 256;
 	int flag = 0;
 
-	if (((*g_info) = ((char *)malloc(buf * sizeof(char)))) == NULL) {
+	if (((*g_info) = ((char *)malloc(sizeof(char)))) == NULL) {
 		fprintf(stderr,"Невозможно выделить память!\n");
 		return -1;
 	}
 
 	do {
+		flag = 0;
 		if (((*g_info) = ((char *)realloc((*g_info), buf))) == NULL) {
 			fprintf(stderr,"Невозможно выделить память!\n");
 			return -1;
 		}
-		fgets(*g_info,buf,stdin);
+		
+		fgets((*g_info), buf, stdin);
+
 		for (int i = 0; i < strlen(*g_info); i++) {
 			if ((*g_info)[i] == '\n') {
 				flag = 1;
-			} else {
-				buf *= 2;
-			}
+				break;
+			} 
 		}
+		
+		if (flag == 0)
+			buf *= 2;
+
 	} while (flag == 0);
+	strtok(*g_info, "\n");
 	return 0;
 }
 static int get_keys(char ** k1, char ** k2, int num) {
@@ -129,11 +137,11 @@ static int t_print(item *table, int *check, int t_size) {
 		return 0;
 	}
 
-	printf("Ключ №1\tКлюч №2\tЗначение\n");
+	printf(HEAD);
 
 	for (int i = 0; i <= MAX_SIZE; i++) {
 		if (check[i] == 1) {
-			printf("%i\t%i\t%s",table[i].key1, table[i].key2, table[i].info);
+			printf(FORM,table[i].key1, table[i].key2, table[i].info);
 		}
 	}
 	return 0;
