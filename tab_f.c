@@ -407,39 +407,42 @@ static int get_int(int *a) {
 	return 0;
 }
 	
-static int get_info(char **g_info) {
-	
-	int buf = 256;
-	int flag = 0;
-	char info[256];
+static int get_info(char **g_info) { 
 
-	if (((*g_info) = ((char *)malloc(sizeof(char)))) == NULL) {
-		fprintf(stderr,"Невозможно выделить память!\n");
-		return -1;
-	}
+	int buf = 256; 
+	int flag = 0; 
+	char info[256]; 
 
-	do {
-		flag = 0;
-		if (((*g_info) = ((char *)realloc((*g_info), buf))) == NULL) {
-			fprintf(stderr,"Невозможно выделить память!\n");
-			return -1;
-		}
-		
-		fgets(info, 256, stdin);
-		strcat(*g_info, info);
+	if (((*g_info) = ((char *)malloc(buf*sizeof(char)))) == NULL) { 
+		fprintf(stderr, "Невозможно выделить память!\n"); 
+		return -1; 
+	} 
+	fgets(info, buf, stdin); 
+	for (int i = 0; i < strlen(info); i++) { 
+		if ((info)[i] == '\n') { 
+			flag = 1; 
+			break; 
+		} 
+	} 
+	strcpy(*g_info, info); 
+	while (flag == 0) { 
+		buf += 256; 
+		if (((*g_info) = ((char *)realloc((*g_info), buf))) == NULL) { 
+			fprintf(stderr, "Невозможно выделить память!\n"); 
+			return -1; 
+		} 
 
-		for (int i = 0; i < strlen(*g_info); i++) {
-			if ((*g_info)[i] == '\n') {
-				flag = 1;
-				break;
+		fgets(info,256, stdin); 
+		for (int i = 0; i < strlen(info); i++) { 
+			if ((info)[i] == '\n') { 
+				flag = 1; 
+				break; 
 			} 
-		}
-		
-		buf *= 2;
-
-	} while (flag == 0);
-	strtok(*g_info, "\n");
-	return 0;
+		} 
+		strcat(*g_info, info); 
+	} 
+	strtok(*g_info, "\n"); 
+	return 0; 
 }
 
 static int open_f(table *tab, char *fname) {
